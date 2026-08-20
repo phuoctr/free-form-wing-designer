@@ -1,5 +1,9 @@
-// Aerodynamics & MAC Calculations
-function calculateMAC(leCurve, teCurve) {
+// ============================================================================
+// Aerodynamics & Stability Analysis (Area, Aspect Ratio, MAC, Neutral Point, CoG)
+// ============================================================================
+
+// --- MAC (Mean Aerodynamic Chord) & CoG Calculation & Rendering ---
+        function calculateMAC(leCurve, teCurve) {
             const span = wing.tipLE.x;
             const teRootToTip = [...teCurve].reverse();
             const steps = 100;
@@ -264,6 +268,3 @@ function calculateMAC(leCurve, teCurve) {
             }
             document.getElementById('badge-cs-count').innerText = `${wing.controlSurfaces.length} Active`;
         }
-
-        // --- Handle Collision & Mouse Interaction ---
-        

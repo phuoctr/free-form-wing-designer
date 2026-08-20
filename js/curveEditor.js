@@ -1,30 +1,75 @@
-// Animation Curve Editor
-const curveEditor = {
-            canvas: document.getElementById('curve-canvas'),
-            ctx: document.getElementById('curve-canvas').getContext('2d'),
-            hoverKey: -1,
-            dragKey: -1,
-            padding: 12
-        };
+// ============================================================================
+// Animation Curve Editor Canvas Widget
+// ============================================================================
 
-        const canvas = document.getElementById('viewport');
-        const ctx = canvas.getContext('2d');
-        const container = document.getElementById('canvas-container');
-        const contextMenu = document.getElementById('context-menu');
-        const toast = document.getElementById('toast');
-        let contextPos = { x: 0, y: 0 };
-        let toastTimeout = null;
+// --- Interactive Animation Curve Canvas Editor ---
+        function renderCurveEditor() {
+            const cCtx = curveEditor.ctx;
+            const cCanvas = curveEditor.canvas;
+            const dpr = window.devicePixelRatio || 1;
+            cCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        function showToast(msg) {
-            toast.innerText = msg;
-            toast.style.display = 'block';
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 2400);
+            const cw = cCanvas.width / dpr;
+            const ch = cCanvas.height / dpr;
+            const p = curveEditor.padding;
+            const dw = cw - p * 2;
+            const dh = ch - p * 2;
+
+            // Background
+            cCtx.fillStyle = '#0d0e12';
+            cCtx.fillRect(0, 0, cw, ch);
+
+            // Grid lines (0, 0.25, 0.5, 0.75, 1.0)
+            cCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+            cCtx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const frac = i / 4;
+                const gx = p + frac * dw;
+                const gy = p + (1 - frac) * dh;
+
+                cCtx.beginPath(); cCtx.moveTo(gx, p); cCtx.lineTo(gx, p + dh); cCtx.stroke();
+                cCtx.beginPath(); cCtx.moveTo(p, gy); cCtx.lineTo(p + dw, gy); cCtx.stroke();
+            }
+
+            // Diagonal baseline
+            cCtx.strokeStyle = 'rgba(255,255,255,0.12)';
+            cCtx.setLineDash([2, 2]);
+            cCtx.beginPath(); cCtx.moveTo(p, p + dh); cCtx.lineTo(p + dw, p); cCtx.stroke();
+            cCtx.setLineDash([]);
+
+            // Draw smooth evaluated curve line
+            cCtx.strokeStyle = '#38bdf8';
+            cCtx.lineWidth = 2.0;
+            cCtx.beginPath();
+            for (let s = 0; s <= 60; s++) {
+                const t = s / 60;
+                const v = evaluateAnimationCurve(t);
+                const px = p + t * dw;
+                const py = p + (1 - v) * dh;
+                if (s === 0) cCtx.moveTo(px, py);
+                else cCtx.lineTo(px, py);
+            }
+            cCtx.stroke();
+
+            // Draw Keyframe Nodes
+            wing.ribCurveKeys.forEach((k, idx) => {
+                const kx = p + k.time * dw;
+                const ky = p + (1 - k.value) * dh;
+
+                const isHover = curveEditor.hoverKey === idx;
+                const isDrag = curveEditor.dragKey === idx;
+
+                cCtx.fillStyle = isDrag ? '#facc15' : (isHover ? '#fff' : '#38bdf8');
+                cCtx.beginPath();
+                cCtx.arc(kx, ky, 4.5, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.strokeStyle = '#000';
+                cCtx.lineWidth = 1.5;
+                cCtx.stroke();
+            });
         }
 
-        // --- Resize Canvas with HiDPI ---
-        
-curveEditor.canvas.addEventListener('mousedown', (e) => {
+        curveEditor.canvas.addEventListener('mousedown', (e) => {
             const rect = curveEditor.canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
             const my = e.clientY - rect.top;
@@ -126,6 +171,3 @@ curveEditor.canvas.addEventListener('mousedown', (e) => {
             wing.ribCurveKeys = [{ time: 0, value: 0 }, { time: 0.5, value: 0.5 }, { time: 1, value: 1 }];
             renderCurveEditor(); render();
         };
-
-        // --- Control Surfaces Management ---
-        

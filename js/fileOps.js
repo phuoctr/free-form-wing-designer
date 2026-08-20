@@ -1,5 +1,9 @@
-// File Operations (JSON/SVG Export & Import, Reset All)
-document.getElementById('btn-export-json').onclick = () => {
+// ============================================================================
+// File Operations: JSON/SVG Export, JSON Import & Reset All
+// ============================================================================
+
+// --- Export / Import ---
+        document.getElementById('btn-export-json').onclick = () => {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(wing, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
@@ -83,5 +87,3 @@ document.getElementById('btn-export-json').onclick = () => {
                 recenter();
             }
         };
-
-        

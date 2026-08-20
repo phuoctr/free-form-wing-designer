@@ -1,5 +1,9 @@
-// Coordinate Transforms & Spline Mathematics
-function worldToScreen(wx, wy) {
+// ============================================================================
+// Spline Mathematics, Coordinate Transforms, Tangents & Geometry
+// ============================================================================
+
+// --- Coordinate Transforms ---
+        function worldToScreen(wx, wy) {
             const cx = canvas.width / (2 * (window.devicePixelRatio || 1));
             const cy = canvas.height / (2 * (window.devicePixelRatio || 1));
             const sx = cx + (wx - view.pan.x) * view.zoom;
@@ -304,5 +308,9 @@ function worldToScreen(wx, wy) {
             return { valid: true, reason: "" };
         }
 
-        // --- Render Loop ---
-        
+function isSameHandle(h1, h2) {
+            if (!h1 || !h2) return false;
+            if (typeof h1 === 'string' && typeof h2 === 'string') return h1 === h2;
+            if (typeof h1 === 'object' && typeof h2 === 'object') return h1.type === h2.type && h1.index === h2.index;
+            return false;
+        }

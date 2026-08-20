@@ -1,5 +1,9 @@
-// 2D Canvas Viewport Renderer
-function render() {
+// ============================================================================
+// 2D Canvas Viewport Renderer (Wing, Ribs, Control Surfaces, Handles)
+// ============================================================================
+
+// --- Render Loop ---
+        function render() {
             const dpr = window.devicePixelRatio || 1;
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             const w = canvas.width / dpr;
@@ -700,12 +704,3 @@ function render() {
                 ctx.fillText(`${label} (${pt.x.toFixed(3)}, ${pt.y.toFixed(3)})`, s.x + 10, s.y + 3);
             }
         }
-function isSameHandle(h1, h2) {
-            if (!h1 || !h2) return false;
-            if (typeof h1 === 'string' && typeof h2 === 'string') return h1 === h2;
-            if (typeof h1 === 'object' && typeof h2 === 'object') return h1.type === h2.type && h1.index === h2.index;
-            return false;
-        }
-
-        // --- MAC (Mean Aerodynamic Chord) & CoG Calculation & Rendering ---
-        
