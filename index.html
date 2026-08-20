@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Free-Form Wing Spline Designer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- Left Control Panel -->
+    <div id="sidebar">
+        <div id="sidebar-header">
+            <h1>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                Wing Planform Designer
+            </h1>
+            <p>Interactive 2D CAD tool with simplified trapezoidal & free-form spline modes, aerodynamic balancing, and control surfaces.</p>
+        </div>
+
+        <!-- Mode Switcher Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" id="tab-mode-simple">▱ Simple Mode</button>
+            <button class="mode-tab" id="tab-mode-spline">∿ Free-Form Spline</button>
+        </div>
+
+        <div id="sidebar-content">
+            
+            <!-- 1. Aerodynamic Metrics -->
+            <div class="section-card">
+                <div class="section-title">1. Planform Aerodynamics</div>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">Full Span (b)</div>
+                        <div class="metric-value" id="val-span">2.000 m</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Total Area (S)</div>
+                        <div class="metric-value" id="val-area">0.450 m²</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Aspect Ratio (AR)</div>
+                        <div class="metric-value" id="val-ar">8.89</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Taper Ratio (λ)</div>
+                        <div class="metric-value" id="val-taper">0.34</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Root Chord</div>
+                        <div class="metric-value" id="val-root-chord">0.350 m</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Tip Chord</div>
+                        <div class="metric-value" id="val-tip-chord">0.120 m</div>
+                    </div>
+                    <div class="metric-item" style="border-color: rgba(192, 132, 252, 0.3)">
+                        <div class="metric-label" style="color:var(--accent-purple)">Mean Aero Chord (MAC)</div>
+                        <div class="metric-value" id="val-mac" style="color:var(--accent-purple)">0.265 m</div>
+                    </div>
+                    <div class="metric-item" style="border-color: rgba(192, 132, 252, 0.3)">
+                        <div class="metric-label" style="color:var(--accent-purple)">MAC Station (Y_mac)</div>
+                        <div class="metric-value" id="val-mac-y" style="color:var(--accent-purple)">0.420 m</div>
+                    </div>
+                    <div class="metric-item" style="border-color: rgba(250, 204, 21, 0.3)">
+                        <div class="metric-label" style="color:var(--accent-yellow)">Neutral Point / AC</div>
+                        <div class="metric-value" id="val-ac-y" style="color:var(--accent-yellow)">Y = -0.154 m</div>
+                    </div>
+                    <div class="metric-item" style="border-color: rgba(250, 204, 21, 0.3)">
+                        <div class="metric-label" style="color:var(--accent-yellow)">Target CoG (SM: 10%)</div>
+                        <div class="metric-value" id="val-cog-y" style="color:var(--accent-yellow)">Y = -0.127 m</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Snapping, Balancing & Viewport Options -->
+            <div class="section-card">
+                <div class="section-title">2. Snapping & Balance CoG</div>
+                <div class="control-row">
+                    <label>Snap Points to Grid:</label>
+                    <input type="checkbox" id="chk-snap-points" checked>
+                </div>
+                <div class="control-row">
+                    <label>Snap Tangents to Grid:</label>
+                    <input type="checkbox" id="chk-snap-tangents" checked>
+                </div>
+                <div class="control-row">
+                    <label>Grid Snap Step: <span id="lbl-snap-step" style="font-weight:700">0.050 m</span></label>
+                    <input type="range" id="rng-snap-step" min="0.005" max="0.20" step="0.005" value="0.05">
+                </div>
+                <div class="control-row">
+                    <label>Show Centerline MAC & CoG:</label>
+                    <input type="checkbox" id="chk-show-mac" checked>
+                </div>
+                <div class="control-row">
+                    <label>Show Point Labels (Coordinates):</label>
+                    <input type="checkbox" id="chk-show-point-labels">
+                </div>
+                <div class="control-row">
+                    <label>Static Margin (SM): <span id="lbl-static-margin" style="font-weight:700">10.0%</span></label>
+                    <input type="range" id="rng-static-margin" min="0" max="25" step="0.5" value="10">
+                </div>
+            </div>
+
+            <!-- 3A. Simple Parametric Geometry (Simple Mode Only) -->
+            <div class="section-card" id="sec-simple-geometry">
+                <div class="section-title">
+                    3. Parametric Planform
+                    <span class="badge-locked">4 Corners Only</span>
+                </div>
+
+                <div class="control-row">
+                    <label>Semi-Span (b/2): <span id="lbl-simple-span" style="font-weight:700">1.000 m</span></label>
+                    <input type="range" id="rng-simple-span" min="0.05" max="4.00" step="0.001" value="1.000">
+                    <input type="text" id="inp-simple-span" value="1.000" style="width:64px" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="control-row">
+                    <label>Root Chord (c_r): <span id="lbl-simple-root" style="font-weight:700">0.350 m</span></label>
+                    <input type="range" id="rng-simple-root" min="0.01" max="2.00" step="0.001" value="0.350">
+                    <input type="text" id="inp-simple-root" value="0.350" style="width:64px" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="control-row">
+                    <label>Tip Chord (c_t): <span id="lbl-simple-tip" style="font-weight:700">0.120 m</span></label>
+                    <input type="range" id="rng-simple-tip" min="0.00" max="2.00" step="0.001" value="0.120">
+                    <input type="text" id="inp-simple-tip" value="0.120" style="width:64px" autocomplete="off" spellcheck="false">
+                </div>
+
+                <div class="control-row">
+                    <label>Sweep Input Mode:</label>
+                    <select id="sel-sweep-type" style="width:145px">
+                        <option value="angle" selected>Sweep Angle (deg)</option>
+                        <option value="distance">Sweep Offset (m)</option>
+                    </select>
+                </div>
+
+                <div class="control-row" id="row-sweep-angle">
+                    <label>LE Sweep (Λ): <span id="lbl-sweep-angle" style="font-weight:700">8.5°</span></label>
+                    <input type="range" id="rng-sweep-angle" min="-30" max="60" step="0.1" value="8.5">
+                    <input type="text" id="inp-sweep-angle" value="8.5" style="width:64px" autocomplete="off" spellcheck="false">
+                </div>
+
+                <div class="control-row" id="row-sweep-dist" style="display:none">
+                    <label>LE Sweep Offset: <span id="lbl-sweep-dist" style="font-weight:700">-0.150 m</span></label>
+                    <input type="range" id="rng-sweep-dist" min="-1.50" max="1.50" step="0.001" value="-0.150">
+                    <input type="text" id="inp-sweep-dist" value="-0.150" style="width:64px" autocomplete="off" spellcheck="false">
+                </div>
+            </div>
+
+            <!-- 3B. Free-Form Primary Anchor Points (Spline Mode Only) -->
+            <div class="section-card" id="sec-spline-anchors" style="display:none">
+                <div class="section-title">
+                    3. Primary Anchors
+                    <span class="badge-locked">Root X=0 Locked</span>
+                </div>
+
+                <div class="control-row">
+                    <label>Root LE (Y):</label>
+                    <div style="display:flex; gap:4px; align-items:center">
+                        <input type="text" id="inp-root-le-y" value="0.000" style="width:68px" autocomplete="off" spellcheck="false">
+                        <button class="btn-sm" id="btn-toggle-root-le-mode" style="padding:2px 6px; font-size:0.68rem">∿ Smooth</button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Root TE (Y):</label>
+                    <div style="display:flex; gap:4px; align-items:center">
+                        <input type="text" id="inp-root-te-y" value="-0.350" style="width:68px" autocomplete="off" spellcheck="false">
+                        <button class="btn-sm" id="btn-toggle-root-te-mode" style="padding:2px 6px; font-size:0.68rem">∿ Smooth</button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Tip LE (X, Y):</label>
+                    <div style="display:flex; gap:4px; align-items:center">
+                        <input type="text" id="inp-tip-x" value="1.000" style="width:62px" placeholder="X" autocomplete="off" spellcheck="false">
+                        <input type="text" id="inp-tip-y" value="-0.150" style="width:62px" placeholder="Y" autocomplete="off" spellcheck="false">
+                        <button class="btn-sm" id="btn-toggle-tip-le-mode" style="padding:2px 6px; font-size:0.68rem">∿ Smooth</button>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <label>Tip TE (X, Y):</label>
+                    <div style="display:flex; gap:4px; align-items:center">
+                        <input type="text" id="inp-tip-te-x" value="1.000" style="width:62px" placeholder="X" autocomplete="off" spellcheck="false">
+                        <input type="text" id="inp-tip-te-y" value="-0.270" style="width:62px" placeholder="Y" autocomplete="off" spellcheck="false">
+                        <button class="btn-sm" id="btn-toggle-tip-te-mode" style="padding:2px 6px; font-size:0.68rem">∿ Smooth</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Tangent Controls (Spline Mode Only) -->
+            <div class="section-card" id="sec-spline-tangents" style="display:none">
+                <div class="section-title">4. Tangent Slopes & Curvature</div>
+                <div class="control-row">
+                    <label>Enable Custom Tangents:</label>
+                    <input type="checkbox" id="chk-tangents" checked>
+                </div>
+                <div class="btn-group-2">
+                    <button class="btn-sm" id="btn-snap-root-ortho">Perp Root (Fuselage)</button>
+                    <button class="btn-sm" id="btn-reset-tangents">Reset Natural</button>
+                </div>
+                <div class="btn-group-2" style="margin-top:2px">
+                    <button class="btn-sm" id="btn-all-smooth">Set All Smooth (∿)</button>
+                    <button class="btn-sm" id="btn-all-sharp">Set All Sharp (▱)</button>
+                </div>
+            </div>
+
+            <!-- 5. Control Surfaces (Box-Based) -->
+            <div class="section-card">
+                <div class="section-title">
+                    5. Control Surfaces
+                    <span id="badge-cs-count" style="font-size:0.7rem; color:var(--accent-purple); font-weight:700">0 Active</span>
+                </div>
+                
+                <button id="btn-toggle-draw-cs" class="primary">
+                    <span id="txt-draw-cs">⊞ Draw Control Surface Box</span>
+                </button>
+                <div style="font-size:0.72rem; color:var(--text-secondary); line-height:1.3">
+                    Click and drag a box across the trailing edge. Overlaps with existing control surfaces will turn red and be rejected.
+                </div>
+
+                <div id="cs-list" style="display:flex; flex-direction:column; gap:4px"></div>
+            </div>
+
+            <!-- 6. Ribs Alignment & Distribution -->
+            <div class="section-card">
+                <div class="section-title">6. Rib Alignment & Spacing</div>
+                <div class="control-row">
+                    <label>Show Ribs (2D Dotted):</label>
+                    <input type="checkbox" id="chk-show-ribs">
+                </div>
+                <div class="control-row">
+                    <label>Show Rib Labels (# / Chord):</label>
+                    <input type="checkbox" id="chk-show-rib-labels" checked>
+                </div>
+                <div class="control-row">
+                    <label>Rib Count: <span id="lbl-rib-count" style="font-weight:700">12</span></label>
+                    <input type="range" id="rng-rib-count" min="2" max="48" value="12">
+                </div>
+                <div class="control-row">
+                    <label>Distribution Mode:</label>
+                    <select id="sel-rib-mode">
+                        <option value="curve" selected>Animation Curve (Normalized)</option>
+                        <option value="curvature">Adaptive Curvature Based (κ)</option>
+                    </select>
+                </div>
+
+                <!-- Curvature Bias Slider -->
+                <div class="control-row" id="row-curvature-bias" style="display:none">
+                    <label>Curvature Sensitivity: <span id="lbl-curv-bias" style="font-weight:700">2.5</span></label>
+                    <input type="range" id="rng-curv-bias" min="0.5" max="8.0" step="0.5" value="2.5">
+                </div>
+
+                <!-- Interactive Animation Curve Widget -->
+                <div class="curve-widget-container" id="container-curve-widget">
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; color:var(--text-secondary)">
+                        <span>Span Distribution Curve (0=Root, 1=Tip):</span>
+                        <span style="font-size:0.68rem; color:var(--accent-cyan)">Click to add key</span>
+                    </div>
+                    <canvas id="curve-canvas" width="280" height="90"></canvas>
+                    <div class="btn-group">
+                        <button class="btn-sm" id="crv-pre-linear">Linear</button>
+                        <button class="btn-sm" id="crv-pre-root">Root Dense</button>
+                        <button class="btn-sm" id="crv-pre-tip">Tip Dense</button>
+                    </div>
+                    <div class="btn-group-2">
+                        <button class="btn-sm" id="crv-pre-scurve">S-Curve (Dense Ends)</button>
+                        <button class="btn-sm" id="crv-pre-mid">Mid Dense</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Presets -->
+            <div class="section-card">
+                <div class="section-title">7. Planform Presets</div>
+                <div class="btn-group">
+                    <button id="pre-straight">Straight</button>
+                    <button id="pre-swept">Swept</button>
+                    <button id="pre-delta">Delta</button>
+                    <button id="pre-elliptical">Spitfire</button>
+                    <button id="pre-cranked">Cranked</button>
+                    <button id="pre-scimitar">Scimitar</button>
+                </div>
+            </div>
+
+            <!-- 8. Control Points List (Spline Mode Only) -->
+            <div class="section-card" id="sec-spline-knots" style="display:none">
+                <div class="section-title">8. Spline Knots</div>
+                <div style="font-size:0.74rem; color:var(--text-secondary)">Leading Edge Knots:</div>
+                <div id="le-points-list" style="display:flex; flex-direction:column; gap:4px"></div>
+                <button class="btn-sm" id="btn-add-le">+ Add LE Knot</button>
+
+                <div style="font-size:0.74rem; color:var(--text-secondary); margin-top:6px">Trailing Edge Knots:</div>
+                <div id="te-points-list" style="display:flex; flex-direction:column; gap:4px"></div>
+                <button class="btn-sm" id="btn-add-te">+ Add TE Knot</button>
+            </div>
+
+            <!-- 9. File Operations -->
+            <div class="section-card">
+                <div class="section-title">9. Export & Import</div>
+                <div class="btn-group-2">
+                    <button class="primary" id="btn-export-json">Export JSON</button>
+                    <button id="btn-export-svg">Export SVG</button>
+                </div>
+                <button class="btn-sm" id="btn-import-json" style="margin-top:4px">Import JSON</button>
+                <input type="file" id="file-input" accept=".json" style="display:none">
+                <button class="btn-sm" id="btn-reset-all" style="margin-top:8px; color:#ef4444; border-color:rgba(239, 68, 68, 0.4)">↺ Reset All to Defaults</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 2D Canvas Viewport -->
+    <div id="canvas-container">
+        <canvas id="viewport"></canvas>
+
+        <!-- Toast Banner -->
+        <div id="toast">Cannot create: Control Surface overlaps with an existing surface!</div>
+
+        <!-- Visual Legend -->
+        <div id="legend">
+            <div class="legend-item">
+                <div class="legend-line" style="background:var(--accent-cyan)"></div>
+                <span>Leading Edge (LE)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:var(--accent-orange)"></div>
+                <span>Trailing Edge (TE)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent-purple)"></div>
+                <span>Control Surfaces</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent-green)"></div>
+                <span>Root Anchor (X=0)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:var(--accent-purple); border-top: 2px solid var(--accent-purple)"></div>
+                <span>Centerline & Semi-Span MAC</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:var(--accent-yellow)"></div>
+                <span>Neutral Point / AC (25% MAC)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#facc15; border:1px solid #000"></div>
+                <span>Target Flight CoG (Balance)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:var(--accent-blue); border-top: 1px dashed var(--accent-blue)"></div>
+                <span>Internal Ribs</span>
+            </div>
+        </div>
+
+        <!-- Viewport Navigation HUD -->
+        <div id="viewport-hud">
+            <button id="btn-zoom-in" title="Zoom In">+</button>
+            <button id="btn-zoom-out" title="Zoom Out">−</button>
+            <button id="btn-recenter" title="Recenter Viewport">⌖</button>
+        </div>
+
+        <!-- Custom Context Menu -->
+        <div id="context-menu">
+            <div class="context-menu-item" id="cm-add-le">Add Leading Edge (LE) Knot Here</div>
+            <div class="context-menu-item" id="cm-add-te">Add Trailing Edge (TE) Knot Here</div>
+            <div class="context-menu-divider"></div>
+            <div class="context-menu-item" id="cm-set-sharp" style="display:none; color:var(--accent-cyan)">▱ Set Sharp Corner (No Curve)</div>
+            <div class="context-menu-item" id="cm-set-smooth" style="display:none; color:var(--accent-cyan)">∿ Set Smooth (Linked Dual Tangents)</div>
+            <div class="context-menu-item" id="cm-set-broken" style="display:none; color:var(--accent-orange)">✂ Set Broken (Split Dual Tangents)</div>
+            <div class="context-menu-item" id="cm-reset-knot-tan" style="display:none; color:var(--accent-yellow)">Reset Knot Tangents</div>
+            <div class="context-menu-item" id="cm-del-point" style="display:none; color:#f87171">Delete Selected Knot</div>
+            <div class="context-menu-item" id="cm-del-cs" style="display:none; color:#f87171">Delete Control Surface</div>
+            <div class="context-menu-item" id="cm-reset-root">Reset Root Tangents</div>
+            <div class="context-menu-item" id="cm-reset-tip">Reset Tip Tangents</div>
+            <div class="context-menu-divider"></div>
+            <div class="context-menu-item" id="cm-recenter">Center Viewport</div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+
+    <!-- Modular Application Scripts -->
+    <script src="js/splineMath.js"></script>
+    <script src="js/aerodynamics.js"></script>
+    <script src="js/wingState.js"></script>
+    <script src="js/curveEditor.js"></script>
+    <script src="js/canvasRenderer.js"></script>
+    <script src="js/uiController.js"></script>
+    <script src="js/fileOps.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
